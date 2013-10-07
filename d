@@ -25,10 +25,7 @@ int main()
     }
 
     mat A= mat(n,n);
-    //finn rho-vektor:
-    for (int i=0;i<=n;i++){
-        rho(i)=rho_min+i*h;
-    }
+    //Finn A matrisen:
     A(0,0)= faktor1+omega_r*omega_r*rho(1)*rho(1);//A(1,1)= 2/h^2+rho(1)^2
     for (int i = 1;i<n;i++){
         A(i,i)=faktor1 +omega_r*omega_r*rho(i+1)*rho(i+1)+1.0/rho(i+1); //d_i
@@ -39,6 +36,8 @@ int main()
     mat eigvec = mat(n,n);
 
     eig_sym(eigval, eigvec, A);
+    //Armadillo har funnet egenverdier og egenvektorer.
+    //Naa skal resultatene skrives til fil:
     string filnavn;
     cout << "filnavn (eksempel 05.txt):";
     cin >> filnavn;
