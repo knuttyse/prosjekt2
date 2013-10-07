@@ -41,6 +41,7 @@ int main()
     string filnavn;
     cout << "filnavn (eksempel 05.txt):";
     cin >> filnavn;
+    //skriver ut den foerste egenverdien (egentlig oppgave c)
     cout << endl << eigval(0);
     ofstream myfile;
     myfile.open (filnavn.c_str());
