@@ -1,0 +1,126 @@
+#include <iostream>
+#include <armadillo>
+
+using namespace std;
+using namespace arma;
+
+int main()
+{
+    int counter=0;
+    double n=200;
+    double rho_min= 0.0;
+    double rho_max=5.0;
+    double h = (rho_max-rho_min)/(n-1);
+    vec rho = zeros(n+1);
+    double faktor1=2.0/(h*h);
+    double faktor2=-1.0/(h*h);
+
+    mat A= mat(n,n);
+    //finn rho-vektor:
+    for (int i=0;i<=n;i++){
+        rho(i)=rho_min+i*h;
+    }
+    A(0,0)= faktor1+rho(1)*rho(1);//A(1,1)= 2/h^2+rho(1)^2
+    for (int i = 1;i<n;i++){
+        A(i,i)=faktor1 +rho(i+1)*rho(i+1); //d_i
+        A(i-1,i)=faktor2; // e_{i-1}
+        A(i,i-1)=faktor2;// e_{i-1}
+    }
+
+    //begynn med Jacobi-metode:
+    double epsilon =10e-8;
+    int l=0;
+    int k=0;
+    double maks = abs(A(0,1)); // maa vaere stoerre enn epsilon!
+    double tau;
+    double t;
+
+    while (maks>epsilon){
+
+        //start: finn element med stoerst absoluttverdi maks
+        maks=0;
+        for ( int i = 0; i < n; i++ ) {
+            // Siden transformasjonen er symmetrisk,
+            // sjekker vi bare elementene på den ene siden av diagonalen.
+            // Her har vi valgt den øvre slik at j>i
+            for ( int j = i + 1; j < n; j++ ) {
+                if ( abs(A(i,j)) > maks ) {
+                    maks = abs(A(i,j));
+                    l = j;
+                    k = i;}
+            }
+        }
+
+        double c;
+        double s;
+        // De trigonometriske identitetene. regner ut tau, t,c,s
+        if (A(k,l)!=0){
+               tau= ( A(l,l)-A(k,k) )/(2*A(k,l));
+               //velger den minste t
+               if(tau<0){
+                    t= -tau-sqrt(1+tau*tau);
+                        }
+               else{
+                    t= -tau+sqrt(1+tau*tau);
+                   }
+               c=1/sqrt(1+t*t);
+               s=t*c;
+        }
+        else{s=0.0;c=1.0;}
+
+        double Akk= A(k,k);
+        double All= A(l,l);
+        double cc=c*c;// litt faerre operasjoner
+        double ss=s*s;
+        double Aklcs2=2*A(k,l)*c*s;//enda litt faerre operasjoner
+        A(k,k)=Akk*cc-Aklcs2+All*ss;
+        A(l,l)=All*cc+Aklcs2+Akk*ss;
+        A(k,l)=0.0;
+        A(l,k)=0.0;
+        for (int i=0;i<n;i++){
+                if( (i!=k) && (i!=l) )//sjekk at vi ikke endrer
+                                      //elementene som ble definert
+                                      //over for-loekken
+                {
+                    double Aik= A(i,k);
+                    double Ail= A(i,l);
+                    A(i,k)=Aik*c-Ail*s;
+                    A(k,i)=A(i,k);
+                    A(i,l)=Ail*c+Aik*s;
+                    A(l,i)=A(i,l);
+                    }
+        }
+        //Teller hvor mange transformasjoner algoritmen bruker
+        counter++;
+    }
+    cout <<"hei";
+    //velg de tre laveste egenverdiene:
+    vec lambda=zeros(3);
+    lambda(0)=1000;
+    lambda(1)=1000;
+    lambda(2)=1000;
+    //finn de tre laveste egenverdiene:
+    for (int i=0;i<n;i++){
+        if ((A(i,i)<lambda(2)) && (A(i,i)>lambda(1))){
+            lambda(2)=A(i,i);
+        }
+        if (A(i,i)<lambda(1) && A(i,i)>lambda(0)  ){
+            //vi fant en lavere lambda_1.
+            lambda(2)=lambda(1);//Da blir opprinnelige lambda_2 erstattet med opprinnelige lambda_1
+            lambda(1)=A(i,i);// Saa oppdaterer jeg lambda_1
+        }
+
+        if (A(i,i)<lambda(0)){
+            lambda(1)=lambda(0);//Samme prinsipp som i if-testen over
+            lambda(0)=A(i,i);   //bare at vi oppdaterer lambda_1 og lambda_0
+        }
+        cout << A(i,i)<<endl;
+    }
+    //skriv ut de tre laveste egenverdiene med 4 gjeldende siffer:
+    cout << "lambda:"<<endl;
+    cout.precision(4);
+
+    cout << lambda(0)<<endl<<lambda(1)<<endl<<lambda(2)<<endl;
+    cout << "counter="<< counter<<endl;
+    return 0;
+}
